@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 import Image from "next/image"
-import loginImage from "@/public/premium_vector-1711979205032-1187a1ac0e88.avif"
+// import loginImage from "@/public/premium_vector-1711979205032-1187a1ac0e88.avif"
 import Link from "next/link"
 
 
@@ -20,7 +20,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   return (
-    <div className={cn("flex flex-col h-screen w-full", className)} {...props}>
+    <div className={cn("flex flex-col h-full w-full", className)} {...props}>
       <Card className="overflow-hidden p-0 h-full w-full rounded-none border-none shadow-none">
         <CardContent className="grid p-0 md:grid-cols-2 h-full w-full">
           <div className="flex items-center justify-center h-full w-full bg-background">
@@ -52,9 +52,16 @@ export function LoginForm({
               </FieldGroup>
             </form>
           </div>
-          <div className="relative hidden bg-muted md:block h-full w-full">
-            <Image src={loginImage} alt="Login Image" className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale" />
-          </div>
+          <div className="relative hidden md:block h-full w-full">
+  <Image
+    src="/finall.png"
+    alt="Login Image"
+    fill
+    sizes="50vw"
+    className="object-cover object-left"
+    priority
+  />
+</div>
         </CardContent>
       </Card>
 
