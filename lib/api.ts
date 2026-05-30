@@ -261,4 +261,37 @@ export async function getHighRiskPatients(page = 1, limit = 10): Promise<HighRis
   return apiFetch(`/patient/high-risk?page=${page}&limit=${limit}`);
 }
 
+export interface DashboardChartsResponse {
+  success: boolean;
+  data: {
+    activeConditions: {
+      stable: number;
+      critical: number;
+      recovered: number;
+    };
+    medicationAdherence: {
+      taken: number;
+      missed: number;
+      complianceRate: number;
+    };
+    topDiseases: {
+      disease: string;
+      count: number;
+    }[];
+    followUpStatuses: {
+      status: string;
+      count: number;
+    }[];
+    recoveryTrend: {
+      date: string;
+      averageRecovery: number;
+    }[];
+  };
+}
+
+export async function getDashboardCharts(): Promise<DashboardChartsResponse> {
+  return apiFetch("/dashboard/charts");
+}
+
+
 
