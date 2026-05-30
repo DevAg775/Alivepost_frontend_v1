@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Image from "next/image"
-import loginImage from "@/public/premium_vector-1711979205032-1187a1ac0e88.avif"
+import loginImage from "@/public/finall.png"
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { hospitalLogin } from "@/lib/api"
@@ -62,9 +62,9 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col h-screen w-full", className)} {...props}>
-      <Card className="overflow-hidden p-0 h-full w-full rounded-none border-none shadow-none">
-        <CardContent className="grid p-0 md:grid-cols-2 h-full w-full">
-          <div className="flex items-center justify-center h-full w-full bg-background">
+      <Card className="overflow-hidden p-0 h-full w-full rounded-none border-none shadow-none ">
+        <CardContent className="grid p-0 md:grid-cols-2 h-full w-full overflow-hidden">
+          <div className="flex items-center justify-center h-full w-full bg-white dark:bg-zinc-950">
             <form onSubmit={handleSubmit} className="p-6 md:p-8 w-full max-w-md mx-auto space-y-6">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-2">
@@ -138,11 +138,12 @@ export function LoginForm({
               </div>
             </form>
           </div>
-          <div className="relative hidden bg-muted md:block h-full w-full">
+          <div className="relative hidden bg-muted md:block h-full w-full overflow-hidden">
             <Image
               src={loginImage}
               alt="Login Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              fill
+              className="object-cover object-left dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent >
