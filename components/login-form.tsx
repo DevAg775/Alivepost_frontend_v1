@@ -28,9 +28,12 @@ export function LoginForm({
   const loginMutation = useMutation({
     mutationFn: () => hospitalLogin(userId, password),
     onSuccess: (data) => {
-      // Set cookie on frontend domain so middleware can detect auth
+      // The backend sets the token cookie via Set-Cookie header automatically.
+      // If the token is also in the response body, set it manually as a fallback.
       const token = data?.data?.token || data?.token
-      document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+      if (token && token !== "undefined") {
+        document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+      }
 
       // Store hospital info for sidebar
       const hospitalInfo = {
@@ -42,7 +45,7 @@ export function LoginForm({
       toast.success("Login Successful", {
         description: `Welcome back, ${hospitalInfo.name}!`,
       })
-      router.push(redirectTo)
+      window.location.href = redirectTo
     },
     onError: (error: Error) => {
       toast.error("Login Failed", {

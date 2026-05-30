@@ -6,7 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-   async headers() {
+  async headers() {
     return [
       {
         source: "/:all*(svg|jpg|jpeg|png|webp|gif|ico)",
@@ -19,6 +19,15 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/:path*`,
+      },
+    ];
+  },
 }
 
 export default nextConfig
+

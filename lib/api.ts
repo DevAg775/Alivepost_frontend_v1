@@ -1,5 +1,6 @@
-const API_BASE = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1`;
-console.log(API_BASE)
+const API_BASE = "/api/v1";
+console.log("API_BASE:", API_BASE);
+
 
 // ─── Generic Fetch Wrapper ─────────────────────────────────────
 async function apiFetch<T = any>(

@@ -42,13 +42,13 @@ export function NavUser({
   const router = useRouter()
 
   function handleLogout() {
-    // Clear the auth cookie
-    document.cookie = "token=; path=/; max-age=0; samesite=lax"
     // Clear hospital info from localStorage
     localStorage.removeItem("hospitalInfo")
     toast.success("Logged out successfully")
-    router.push("/login")
+    // Redirect to login with logout parameter to let middleware delete HttpOnly/other cookies on the server
+    window.location.href = "/login?logout=1"
   }
+
 
   return (
     <SidebarMenu>
