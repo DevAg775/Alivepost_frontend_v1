@@ -123,7 +123,10 @@ export default function DashboardPage() {
               </CardFooter>
             </Card>
 
-            <Card className={cn("@container/card transition-colors duration-300", stats.highRiskPatients > 0 && "border-amber-500/30 bg-amber-500/[0.02]")}>
+            <Card 
+              onClick={() => router.push("/dashboard/high-risk")}
+              className={cn("@container/card transition-all duration-300 cursor-pointer hover:border-amber-500/40 hover:shadow-md", stats.highRiskPatients > 0 && "border-amber-500/30 bg-amber-500/[0.02]")}
+            >
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
                   <AlertTriangle className={cn("h-4 w-4", stats.highRiskPatients > 0 ? "text-amber-600" : "text-muted-foreground")} /> High Risk Patients

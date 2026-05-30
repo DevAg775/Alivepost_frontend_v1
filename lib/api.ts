@@ -244,3 +244,21 @@ export async function getDashboardSummary(): Promise<DashboardSummaryResponse> {
   return apiFetch("/dashboard/summaryCard");
 }
 
+export interface HighRiskPatientsResponse {
+  success: boolean;
+  data: {
+    patients: any[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export async function getHighRiskPatients(page = 1, limit = 10): Promise<HighRiskPatientsResponse> {
+  return apiFetch(`/patient/high-risk?page=${page}&limit=${limit}`);
+}
+
+
