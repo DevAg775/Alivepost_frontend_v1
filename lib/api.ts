@@ -228,3 +228,19 @@ export async function searchDoctors(name: string) {
 export async function getDoctorById(id: number) {
   return apiFetch(`/doctor/?id=${id}`);
 }
+
+// ─── Dashboard ──────────────────────────────────────────────────
+export interface DashboardSummaryResponse {
+  success: boolean;
+  data: {
+    totalPatients: number;
+    activePatients: number;
+    criticalAlerts: number;
+    highRiskPatients: number;
+  };
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummaryResponse> {
+  return apiFetch("/dashboard/summaryCard");
+}
+

@@ -3,11 +3,14 @@
 import { useRouter } from "next/navigation"
 import {
   UserRoundPlus, Search, Stethoscope, Pill, Activity, Microscope,
-  ArrowRight, Users, HeartPulse, Building2
+  ArrowRight, Users, HeartPulse, Building2, AlertCircle, AlertTriangle
 } from "lucide-react"
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { IconTrendingUp } from "@tabler/icons-react"
+import { useQuery } from "@tanstack/react-query"
+import { getDashboardSummary } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
 const quickActions = [
   {
@@ -55,6 +58,23 @@ const quickActions = [
 export default function DashboardPage() {
   const router = useRouter()
 
+  const { data: summaryData, isLoading } = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: getDashboardSummary,
+  })
+
+  const stats = summaryData?.data || {
+    totalPatients: 0,
+    activePatients: 0,
+    criticalAlerts: 0,
+    highRiskPatients: 0,
+  }
+
+  const displayVal = (val: number) => {
+    if (isLoading) return "..."
+    return val.toString()
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -64,10 +84,10 @@ export default function DashboardPage() {
             <Card className="@container/card">
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <Users className="h-4 w-4" /> Total Patients
+                  <Users className="h-4 w-4 text-blue-600" /> Total Patients
                 </CardDescription>
                 <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  —
+                  {displayVal(stats.totalPatients)}
                 </CardTitle>
               </CardHeader>
               <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -78,42 +98,42 @@ export default function DashboardPage() {
             <Card className="@container/card">
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <HeartPulse className="h-4 w-4" /> Active Conditions
+                  <HeartPulse className="h-4 w-4 text-emerald-600" /> Active Patients
                 </CardDescription>
                 <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  —
+                  {displayVal(stats.activePatients)}
                 </CardTitle>
               </CardHeader>
               <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                <div className="text-muted-foreground">Ongoing patient conditions</div>
+                <div className="text-muted-foreground">Patients with ongoing conditions</div>
               </CardFooter>
             </Card>
 
-            <Card className="@container/card">
+            <Card className={cn("@container/card transition-colors duration-300", stats.criticalAlerts > 0 && "border-red-500/30 bg-red-500/[0.02]")}>
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <Stethoscope className="h-4 w-4" /> Doctors
+                  <AlertCircle className={cn("h-4 w-4", stats.criticalAlerts > 0 ? "text-red-600 animate-pulse" : "text-muted-foreground")} /> Critical Alerts
                 </CardDescription>
-                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  —
+                <CardTitle className={cn("text-2xl font-semibold tabular-nums @[250px]/card:text-3xl", stats.criticalAlerts > 0 && "text-red-600")}>
+                  {displayVal(stats.criticalAlerts)}
                 </CardTitle>
               </CardHeader>
               <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                <div className="text-muted-foreground">Hospital doctors on staff</div>
+                <div className="text-muted-foreground">Patients requiring urgent care</div>
               </CardFooter>
             </Card>
 
-            <Card className="@container/card">
+            <Card className={cn("@container/card transition-colors duration-300", stats.highRiskPatients > 0 && "border-amber-500/30 bg-amber-500/[0.02]")}>
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <Pill className="h-4 w-4" /> Medications
+                  <AlertTriangle className={cn("h-4 w-4", stats.highRiskPatients > 0 ? "text-amber-600" : "text-muted-foreground")} /> High Risk Patients
                 </CardDescription>
-                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  —
+                <CardTitle className={cn("text-2xl font-semibold tabular-nums @[250px]/card:text-3xl", stats.highRiskPatients > 0 && "text-amber-600")}>
+                  {displayVal(stats.highRiskPatients)}
                 </CardTitle>
               </CardHeader>
               <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                <div className="text-muted-foreground">Medicines in formulary</div>
+                <div className="text-muted-foreground">High risk patient cases</div>
               </CardFooter>
             </Card>
           </div>
