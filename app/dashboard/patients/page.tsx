@@ -11,7 +11,7 @@ import { format } from "date-fns"
 import {
     Phone, Search, ArrowLeft, User, Heart, Droplets, Calendar as CalendarIcon2,
     Activity, Pill, Plus, Clock, Stethoscope, Building2, FileText,
-    AlertCircle, CheckCircle2, Shield, Loader2, Check, X, ListChecks
+    AlertCircle, CheckCircle2, Shield, Loader2, Check, X, ListChecks, Smartphone
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -302,6 +302,8 @@ export default function PatientsPage() {
 
     const conditions = patient?.conditions || []
     const medicalHistory = patient?.medicalHistory || []
+    const medicinesCount = conditions.reduce((acc: number, c: any) => acc + (c.medicineAlloted?.length || 0), 0)
+    const progressCount = conditions.reduce((acc: number, c: any) => acc + (c.patientProgress?.length || 0), 0)
 
     // ═══════════════════════════════════════════════════
     // RENDER
@@ -558,15 +560,26 @@ export default function PatientsPage() {
                                             <CalendarIcon2 className="h-3.5 w-3.5 text-blue-500" /> {format(new Date(patient.dateOfBirth), "dd MMM yyyy")}
                                         </Badge>
                                     )}
+                                    {patient.idType && patient.idNumber && (
+                                        <Badge variant="outline" className="gap-1.5 px-3 py-1 text-sm bg-muted/30">
+                                            <FileText className="h-3.5 w-3.5 text-muted-foreground" /> {patient.idType}: {patient.idNumber}
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Tabs */}
                         <Tabs defaultValue="conditions" className="w-full">
-                            <TabsList className="w-full justify-start">
+                            <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-muted p-1">
                                 <TabsTrigger value="conditions" className="gap-1.5">
                                     <Activity className="h-4 w-4" /> Conditions ({conditions.length})
+                                </TabsTrigger>
+                                <TabsTrigger value="medicines" className="gap-1.5">
+                                    <Pill className="h-4 w-4" /> Prescribed Medicines ({medicinesCount})
+                                </TabsTrigger>
+                                <TabsTrigger value="progress" className="gap-1.5">
+                                    <ListChecks className="h-4 w-4" /> Tracked Progress ({progressCount})
                                 </TabsTrigger>
                                 <TabsTrigger value="history" className="gap-1.5">
                                     <FileText className="h-4 w-4" /> Medical History ({medicalHistory.length})
@@ -931,66 +944,207 @@ export default function PatientsPage() {
                                                         </Button>
                                                     </div>
                                                 </div>
-
-                                                {/* Medicines List */}
-                                                {c.medicineAlloted && c.medicineAlloted.length > 0 && (
-                                                    <div className="border-t bg-muted/30 px-4 py-3">
-                                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Prescribed Medicines</p>
-                                                        <div className="grid gap-2">
-                                                            {c.medicineAlloted.map((m: any) => (
-                                                                <div key={m.id} className="flex items-center justify-between rounded-lg bg-background p-3 text-sm border">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Pill className="h-4 w-4 text-primary shrink-0" />
-                                                                        <span className="font-medium">{m.medicine?.brandName || `Med #${m.medicineId}`}</span>
-                                                                        <Badge variant="secondary" className="text-xs">Qty: {m.quantity}</Badge>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-3 text-muted-foreground shrink-0">
-                                                                        {m.timings && m.timings.length > 0 && (
-                                                                            <span className="flex items-center gap-1 text-xs">
-                                                                                <Clock className="h-3 w-3" />
-                                                                                {m.timings.map((t: any) =>
-                                                                                    typeof t === "string" ? t : t.timing ? format(new Date(t.timing), "HH:mm") : ""
-                                                                                ).join(", ")}
-                                                                            </span>
-                                                                        )}
-                                                                        <span className="text-xs">till {format(new Date(m.tillDate), "dd MMM yyyy")}</span>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Progress Schedule List */}
-                                                {c.patientProgress && c.patientProgress.length > 0 && (
-                                                    <div className="border-t bg-muted/30 px-4 py-3">
-                                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Tracked Progress</p>
-                                                        <div className="grid gap-2">
-                                                            {c.patientProgress.map((p: any) => {
-                                                                let questionsCount = 0;
-                                                                try {
-                                                                    questionsCount = p.questions ? p.questions.length : 0;
-                                                                } catch (e) { }
-                                                                return (
-                                                                    <div key={p.id} className="flex items-center justify-between rounded-lg bg-background p-3 text-sm border">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <ListChecks className="h-4 w-4 text-primary shrink-0" />
-                                                                            <span className="font-medium">{format(new Date(p.scheduledDate), "MMM dd, yyyy")}</span>
-                                                                            <Badge variant="secondary" className="text-xs">{p.followUpStatus}</Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-3 text-muted-foreground shrink-0">
-                                                                            <span className="flex items-center gap-1 text-xs">
-                                                                                {questionsCount} Questions
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </motion.div>
                                         ))}
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            {/* ────── PRESCRIBED MEDICINES TAB ────── */}
+                            <TabsContent value="medicines" className="mt-4 space-y-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold">Prescribed Medicines</h3>
+                                    <p className="text-sm text-muted-foreground">Medications prescribed across all active conditions, along with compliance logs</p>
+                                </div>
+                                {medicinesCount === 0 ? (
+                                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-12">
+                                        <Pill className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                                        <p className="text-sm text-muted-foreground">No medicines prescribed yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid gap-6">
+                                        {conditions.map((c: any) => {
+                                            const meds = c.medicineAlloted || []
+                                            if (meds.length === 0) return null
+                                            return (
+                                                <div key={c.id} className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                            Condition: {c.disease?.name || `Disease #${c.diseaseId}`}
+                                                        </span>
+                                                        <StatusBadge status={c.status} />
+                                                    </div>
+                                                    <div className="grid gap-4 sm:grid-cols-2">
+                                                        {meds.map((m: any) => (
+                                                            <div key={m.id} className="rounded-xl border bg-card p-4 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                                                                            <Pill className="h-5 w-5" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-semibold text-sm leading-snug">{m.medicine?.brandName || `Med #${m.medicineId}`}</p>
+                                                                            <p className="text-xs text-muted-foreground mt-0.5">{m.medicine?.genericName || "Generic Medicine"}</p>
+                                                                            <div className="flex items-center gap-1.5 mt-2">
+                                                                                <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-medium">Qty: {m.quantity}</Badge>
+                                                                                {m.medicine?.dosageStrength && (
+                                                                                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-medium">{m.medicine.dosageStrength} {m.medicine.dosageForm}</Badge>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right text-[11px] text-muted-foreground shrink-0 font-medium">
+                                                                        <span className="block">till {format(new Date(m.tillDate), "dd MMM yyyy")}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {m.timings && m.timings.length > 0 && (
+                                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 py-1.5 px-2.5 rounded-lg border border-dashed">
+                                                                        <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                                                                        <span className="font-medium">Timings: </span>
+                                                                        <span>
+                                                                            {m.timings.map((t: any) =>
+                                                                                typeof t === "string" ? t : t.timing ? format(new Date(t.timing), "HH:mm") : ""
+                                                                            ).join(", ")}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Compliance log */}
+                                                                {m.MedicineStatus && m.MedicineStatus.length > 0 ? (
+                                                                    <div className="border-t pt-3 space-y-2 mt-auto">
+                                                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Compliance History</p>
+                                                                        <div className="grid gap-1.5 max-h-36 overflow-y-auto pr-1">
+                                                                            {m.MedicineStatus.map((status: any) => (
+                                                                                <div key={status.id} className="flex flex-col gap-0.5 text-xs py-1.5 px-2.5 rounded-lg border bg-muted/20">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className={cn(
+                                                                                            "inline-flex items-center gap-1 font-semibold text-xs",
+                                                                                            status.medicineTaken ? "text-emerald-600" : "text-red-500"
+                                                                                        )}>
+                                                                                            {status.medicineTaken ? (
+                                                                                                <><Check className="h-3.5 w-3.5" /> Taken</>
+                                                                                            ) : (
+                                                                                                <><X className="h-3.5 w-3.5" /> Missed</>
+                                                                                            )}
+                                                                                        </span>
+                                                                                        <span className="text-[10px] text-muted-foreground">
+                                                                                            {format(new Date(status.createdAt), "dd MMM, HH:mm")}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    {status.remark && (
+                                                                                        <p className="text-[11px] text-muted-foreground italic mt-0.5 pl-4">
+                                                                                            &ldquo;{status.remark}&rdquo;
+                                                                                        </p>
+                                                                                    )}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="border-t pt-3 text-center text-xs text-muted-foreground italic mt-auto">
+                                                                        No logs recorded yet
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            {/* ────── TRACKED PROGRESS TAB ────── */}
+                            <TabsContent value="progress" className="mt-4 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-lg font-semibold">Tracked Progress</h3>
+                                        <p className="text-sm text-muted-foreground">Scheduled follow-up check-ins and recovery tracking</p>
+                                    </div>
+                                </div>
+                                {progressCount === 0 ? (
+                                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-12">
+                                        <ListChecks className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                                        <p className="text-sm text-muted-foreground">No progress entries recorded yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid gap-6">
+                                        {conditions.map((c: any) => {
+                                            const progress = c.patientProgress || []
+                                            if (progress.length === 0) return null
+                                            return (
+                                                <div key={c.id} className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                            Condition: {c.disease?.name || `Disease #${c.diseaseId}`}
+                                                        </span>
+                                                        <StatusBadge status={c.status} />
+                                                    </div>
+                                                    <div className="grid gap-4">
+                                                        {progress.map((p: any) => (
+                                                            <div key={p.id} className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow space-y-4">
+                                                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                                                                            <CalendarIcon2 className="h-5 w-5" />
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-semibold text-sm leading-snug">
+                                                                                {format(new Date(p.scheduledDate), "MMMM dd, yyyy")}
+                                                                            </p>
+                                                                            <p className="text-xs text-muted-foreground mt-0.5">Scheduled Date</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Badge variant="outline" className="text-xs font-semibold px-2.5 py-0.5 bg-muted">
+                                                                            Follow-up: {p.followUpStatus || "N/A"}
+                                                                        </Badge>
+                                                                        {p.percentageRecovery !== null && p.percentageRecovery !== undefined && (
+                                                                            <Badge className="text-xs font-bold bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/15">
+                                                                                Recovery: {p.percentageRecovery}%
+                                                                            </Badge>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                {p.description && (
+                                                                    <div className="bg-muted/30 p-3 rounded-lg border text-sm text-muted-foreground italic">
+                                                                        &ldquo;{p.description}&rdquo;
+                                                                    </div>
+                                                                )}
+
+                                                                {p.questions && p.questions.length > 0 ? (
+                                                                    <div className="space-y-2">
+                                                                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Check-in Responses</p>
+                                                                        <div className="grid gap-2 sm:grid-cols-2">
+                                                                            {p.questions.map((q: any, qIdx: number) => (
+                                                                                <div key={qIdx} className="text-xs flex flex-col gap-1 bg-muted/20 p-3 rounded-xl border border-dashed">
+                                                                                    <span className="font-medium text-muted-foreground">Question: {q.question}</span>
+                                                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                                                        <span className="font-semibold">Response:</span>
+                                                                                        {q.isText ? (
+                                                                                            <span className="text-foreground">{q.answer || "Filled (No text)"}</span>
+                                                                                        ) : (
+                                                                                            <Badge variant="secondary" className="text-[10px] py-0 px-1 bg-primary/10 text-primary border-primary/20">
+                                                                                                {q.answer || "Normal"}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-xs text-muted-foreground italic pl-1">No checklist questions answered for this check-in.</p>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 )}
                             </TabsContent>
