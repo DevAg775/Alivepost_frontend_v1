@@ -32,6 +32,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table"
 import { toast } from "sonner"
 import {
     searchPatientByMobile,
@@ -41,6 +44,7 @@ import {
     searchDisease,
     searchMedicine,
     searchDoctors,
+    getPatientList,
 } from "@/lib/api"
 
 // ─── Zod Schemas ─────────────────────────────────────────────────
@@ -134,6 +138,15 @@ export default function PatientsPage() {
     const [conditionDialogOpen, setConditionDialogOpen] = useState(false)
     const [medicineDialogOpen, setMedicineDialogOpen] = useState(false)
     const [selectedConditionId, setSelectedConditionId] = useState<number | null>(null)
+
+    const [page, setPage] = useState(1)
+    const limit = 10
+
+    // Paginated patient list query
+    const patientListQuery = useQuery({
+        queryKey: ["patient-list", page],
+        queryFn: () => getPatientList(page, limit),
+    })
 
     // Search inputs for selects
     const [diseaseSearch, setDiseaseSearch] = useState("")
@@ -298,41 +311,37 @@ export default function PatientsPage() {
         <div className="flex flex-1 flex-col p-4 md:p-6 lg:p-8">
             <AnimatePresence mode="wait">
                 {!mobileNumber ? (
-                    /* ──── STEP 1: SEARCH BY MOBILE ──── */
+                    /* ──── STEP 1: SEARCH & DIRECTORY ──── */
                     <motion.div
                         key="search"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="flex flex-1 items-center justify-center"
+                        className="space-y-6"
                     >
-                        <div className="w-full max-w-md">
-                            <div className="mb-8 text-center">
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                                    <Search className="h-8 w-8 text-primary" />
-                                </div>
-                                <h1 className="text-3xl font-bold tracking-tight">Find Patient</h1>
-                                <p className="mt-2 text-muted-foreground">
-                                    Enter the patient&apos;s mobile number to access their profile
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight">Patients Directory</h1>
+                                <p className="text-muted-foreground mt-1">
+                                    Search for a patient by phone number or select one from the directory list below.
                                 </p>
                             </div>
-
-                            <div className="rounded-2xl border bg-card p-6 shadow-sm">
+                            <div className="w-full md:max-w-md bg-card p-4 rounded-xl border shadow-sm">
                                 <Form {...phoneForm}>
-                                    <form onSubmit={phoneForm.handleSubmit(handleSearch)} className="space-y-4">
+                                    <form onSubmit={phoneForm.handleSubmit(handleSearch)} className="flex items-end gap-2">
                                         <FormField
                                             control={phoneForm.control}
                                             name="mobileNumber"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Mobile Number</FormLabel>
+                                                <FormItem className="flex-1 space-y-1">
+                                                    <FormLabel className="text-xs">Mobile Number</FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
-                                                            <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                            <Phone className="absolute left-3 top-2 h-3.5 w-3.5 text-muted-foreground" />
                                                             <Input
                                                                 placeholder="9876543210"
-                                                                className="pl-9 h-11 text-base"
+                                                                className="pl-8 h-9 text-sm"
                                                                 {...field}
                                                             />
                                                         </div>
@@ -343,18 +352,149 @@ export default function PatientsPage() {
                                         />
                                         <Button
                                             type="submit"
-                                            className="w-full h-11 text-base font-medium"
+                                            size="sm"
+                                            className="h-9 font-medium"
                                             disabled={patientQuery.isLoading}
                                         >
                                             {patientQuery.isLoading ? (
-                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Searching...</>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : (
-                                                <><Search className="mr-2 h-4 w-4" /> Search Patient</>
+                                                <Search className="h-4 w-4" />
                                             )}
+                                            <span className="ml-1.5 hidden sm:inline">Search</span>
                                         </Button>
                                     </form>
                                 </Form>
                             </div>
+                        </div>
+
+                        {/* PATIENT LIST TABLE */}
+                        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                            {patientListQuery.isLoading ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-2">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">Loading patients list...</p>
+                                </div>
+                            ) : patientListQuery.isError ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-2 text-red-500">
+                                    <AlertCircle className="h-8 w-8" />
+                                    <p className="text-sm font-medium">Failed to load patients list</p>
+                                    <p className="text-xs text-muted-foreground">{(patientListQuery.error as Error)?.message}</p>
+                                </div>
+                            ) : !patientListQuery.data?.data?.patients || patientListQuery.data.data.patients.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                                    <User className="h-12 w-12 text-muted-foreground/40 mb-3" />
+                                    <p className="font-medium">No patients found</p>
+                                    <p className="text-sm text-muted-foreground">Add a new patient to get started.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Patient Details</TableHead>
+                                                <TableHead>Gender & Age</TableHead>
+                                                <TableHead>ID Type & Number</TableHead>
+                                                <TableHead>Mobile Number</TableHead>
+                                                <TableHead>Condition(s)</TableHead>
+                                                <TableHead className="text-right">Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {patientListQuery.data.data.patients.map((pat: any) => {
+                                                const age = pat.dateOfBirth
+                                                    ? Math.floor((new Date().getTime() - new Date(pat.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                                                    : "—"
+                                                
+                                                // Primary condition or first condition if any
+                                                const primaryCondition = pat.conditions?.[0]
+                                                
+                                                return (
+                                                    <TableRow key={pat.id} className="hover:bg-muted/50 transition-colors">
+                                                        <TableCell className="font-medium">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs">
+                                                                    {pat.name.slice(0, 2).toUpperCase()}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-semibold text-sm leading-none">{pat.name}</p>
+                                                                    <div className="flex items-center gap-1.5 mt-1.5">
+                                                                        <Badge variant="outline" className="text-[10px] py-0 px-1 font-semibold text-red-500 bg-red-500/5 border-red-500/10 gap-0.5">
+                                                                            <Droplets className="h-2.5 w-2.5" /> {pat.bloodGroup || "—"}
+                                                                        </Badge>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <p className="text-sm">{pat.gender ? pat.gender.charAt(0) + pat.gender.slice(1).toLowerCase() : "—"}</p>
+                                                            <p className="text-xs text-muted-foreground mt-0.5">{age} years old</p>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <p className="text-sm">{pat.idType || "—"}</p>
+                                                            <p className="text-xs text-muted-foreground mt-0.5">{pat.idNumber || "—"}</p>
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm">
+                                                            {pat.mobileNumber || "—"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {primaryCondition ? (
+                                                                <div className="flex flex-col gap-1.5 items-start">
+                                                                    <Badge variant="secondary" className="text-xs font-medium">
+                                                                        {primaryCondition.disease?.name || `Disease #${primaryCondition.diseaseId}`}
+                                                                    </Badge>
+                                                                    <StatusBadge status={primaryCondition.status} />
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-xs text-muted-foreground">No active conditions</span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => setMobileNumber(pat.mobileNumber)}
+                                                                className="h-8 text-xs font-semibold"
+                                                            >
+                                                                View Profile
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                    
+                                    {/* PAGINATION */}
+                                    {patientListQuery.data.data.pagination && patientListQuery.data.data.pagination.totalPages > 1 && (
+                                        <div className="flex items-center justify-between border-t px-4 py-4 bg-muted/20">
+                                            <div className="text-sm text-muted-foreground">
+                                                Showing page <span className="font-semibold">{page}</span> of <span className="font-semibold">{patientListQuery.data.data.pagination.totalPages}</span> ({patientListQuery.data.data.pagination.total} patients)
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={page <= 1}
+                                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                                    className="h-8 text-xs"
+                                                >
+                                                    Previous
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={page >= patientListQuery.data.data.pagination.totalPages}
+                                                    onClick={() => setPage(p => p + 1)}
+                                                    className="h-8 text-xs"
+                                                >
+                                                    Next
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 ) : patientQuery.isLoading ? (

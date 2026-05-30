@@ -79,6 +79,24 @@ export async function searchPatientByMobile(mobile: string) {
   return apiFetch(`/patient/search?mobile=${encodeURIComponent(mobile)}`);
 }
 
+export interface PatientsListResponse {
+  success: boolean;
+  data: {
+    patients: any[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
+export async function getPatientList(page = 1, limit = 10): Promise<PatientsListResponse> {
+  return apiFetch(`/patient/list?page=${page}&limit=${limit}`);
+}
+
+
 // ─── Medical History ───────────────────────────────────────────
 export interface CreateMedicalHistoryData {
   diseaseId: number;
