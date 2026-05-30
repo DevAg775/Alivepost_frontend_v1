@@ -211,3 +211,13 @@ export async function searchDoctors(name: string) {
 export async function getDoctorById(id: number) {
   return apiFetch(`/doctor/?id=${id}`);
 }
+
+// ─── Patient List ───────────────────────────────────────────────
+export async function getPatientList(page: number = 1, limit: number = 10) {
+  return apiFetch(`/patient/list?page=${page}&limit=${limit}`);
+}
+
+// ─── Dashboard ─────────────────────────────────────────────────
+export async function getDashboardSummary() {
+  return apiFetch("/dashboard/summaryCard");
+}
