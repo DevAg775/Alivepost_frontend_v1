@@ -192,6 +192,8 @@ export default function CreatePatient() {
                                                 <SelectItem value="AADHAR">Aadhar Card</SelectItem>
                                                 <SelectItem value="DRIVING_LICENSE">Driving License</SelectItem>
                                                 <SelectItem value="PASSPORT">Passport</SelectItem>
+                                                <SelectItem value="AbhaId">Abha ID</SelectItem>
+                                                <SelectItem value="patientId">Patient ID</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
